@@ -1,17 +1,15 @@
-package com.studentapp;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Random;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 public class NumberGuessServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private int targetNumber;
+
     public void init() throws ServletException {
         targetNumber = new Random().nextInt(100) + 1;
     }
+
+    public int getTargetNumber() {  // ✅ Added method
+        return targetNumber;
+    }
+
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html");
@@ -22,6 +20,7 @@ public class NumberGuessServlet extends HttpServlet {
         out.println("<input type='submit' value='Submit' />");
         out.println("</form>");
     }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html");
