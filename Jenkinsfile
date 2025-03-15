@@ -17,9 +17,9 @@ pipeline {
         stage('Deploy to Tomcat Server') {
             steps {
                 deploy adapters: [tomcat7(
-                    credentialsId: 'deploy-user',
+                    credentialsId: 'tomcat-credentials', // Add credentials here
                     path: '',
-                    url: 'http://51.21.194.75:8080/'
+                    url: 'http://51.21.194.75:8080/manager/html'
                 )], contextPath: null, war: '**/target/*.war'
             }
         }
