@@ -4,7 +4,7 @@ pipeline {
             steps {
                 script {
                     // If repo is private, add credentialsId
-                    git branch: 'dev',
+                    git branch: 'develop',
                         url: 'https://github.com/SASowah/numbers-guess-gameApp.git'
                 }
             }
