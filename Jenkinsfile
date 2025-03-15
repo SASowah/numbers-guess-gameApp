@@ -1,43 +1,40 @@
 pipeline {
-    agent any
-
-    stages {
+    agent any    stages {
         stage('Checkout Code') {
             steps {
                 script {
                     // If repo is private, add credentialsId
-                    git branch: 'dev', 
+                    git branch: 'dev',
                         url: 'https://github.com/SASowah/numbers-guess-gameApp.git'
                 }
             }
-        }
-        
-        stage('Build') {
+        }        stage('Build') {
             steps {
                 sh 'mvn clean package'
             }
-        }
-
-        stage('Test') {
+        }        stage('Test') {
             steps {
                 sh 'mvn test'
             }
-        }
-
-        stage('Deploy') {
+        }        stage('Deploy') {
             steps {
-                echo 'Deploying Application...'
+                script {
+                    echo 'Deploying Application to Tomcat...'
+                    deploy adapters: [
+                        tomcat9(credentialsId: 'tomcat-cred', path: '', url: 'http://your-server-ip:8080')
+                    ], contextPath: 'numbers-game', war: '**/target/*.war'
+                }
             }
         }
-    }
-
-    // ✅ Added post section for notifications & cleanup
+    }    // :white_check_mark: Post section for notifications & cleanup
     post {
         success {
-            echo '✅ Build and Deployment Successful!'
+            echo ':white_check_mark: Build and Deployment Successful!'
         }
         failure {
-            echo '❌ Build Failed! Check logs for issues.'
+            echo ':x: Build Failed! Check logs for issues.'
         }
     }
 }
+
+
