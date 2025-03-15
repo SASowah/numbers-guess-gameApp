@@ -21,7 +21,7 @@ pipeline {
                 script {
                     echo 'Deploying Application to Tomcat...'
                     deploy adapters: [
-                        tomcat9(credentialsId: 'tomcat-cred', path: '', url: 'http://your-server-ip:8080')
+                         tomcat9(credentialsId: 'tomcat-cred', path: '', url: "${env.TOMCAT_URL}")
                     ], contextPath: 'numbers-game', war: '**/target/*.war'
                 }
             }
