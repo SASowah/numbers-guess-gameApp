@@ -2,19 +2,17 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_URL = credentials('sonarqube-url') // Stored in Jenkins Credentials
-    }
-
-    parameters {
-        string(name: 'DEPLOY_ENV', defaultValue: 'dev', description: 'Deployment Environment')
-        string(name: 'BRANCH', defaultValue: 'dev', description: 'Git Branch to build')
-    }
+	SONARQUBE_URL = "http://13.53.123.174:9000"
+	SONARQUBE_TOKEN = credentials("sonarqube-token")
+	TOMCAT_CREDS =credentials ("tomcat-credentials")
+	TOMCAT_URL = "http://13.60.242.211:8080"
 
     stages {
         stage('Checkout Code') {
             steps {
                 script {
-                    git branch: "${params.BRANCH}", 
+                    // If repo is private, add credentialsId
+                    git branch: 'dev', 
                         url: 'https://github.com/SASowah/numbers-guess-gameApp.git'
                 }
             }
@@ -22,7 +20,7 @@ pipeline {
         
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean package'
             }
         }
 
@@ -32,45 +30,39 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+ 	stage('SonarQube Analysis') {
             steps {
                 script {
-                    withSonarQubeEnv('sonarqube-token') { 
-                        sh '''
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=NumbersGuessGame \
-                        -Dsonar.projectName="NumbersGuessGame" \
-                        -Dsonar.host.url=${SONARQUBE_URL} \
-                        -Dsonar.login=${SONAR_AUTH_TOKEN}
-                        '''
-                    }
-                }
+		      sh '''
+			mvn clean verify sonar:sonar \
+  			-Dsonar.projectKey=NumbersGuessGame \
+  			-Dsonar.projectName='NumbersGuessGame' \
+  			-Dsonar.host.url=$SONARQUBE_URL \
+  			-Dsonar.token=sqp_$SONARQUBE_TOKEN
+			'''
+                   
             }
         }
+	
 
-        stage('Deploy to Tomcat') {
-            environment {
-                TOMCAT_URL = credentials('tomcat-url') // Jenkins Credential Store
-            }
+        stage('Deploy') {
             steps {
-                script {
-                    deploy adapters: [tomcat7(
-                        credentialsId: 'tomcat-credentials', 
-                        path: '', 
-                        url: "${TOMCAT_URL}"
-                    )], 
-                    contextPath: 'numbers-game', war: 'target/*.war'
-                }
+                echo 'Deploying Application...'
+                
+                // Deploying using Tomcat plugin
+                deploy adapters: [tomcat7(credentialsId: 'tomcat-credentials', path: '', url: 'http://13.60.242.211:8080')], 
+                    contextPath: null, war: '**/*.war'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build, Testing, SonarQube Analysis, and Deployment Successful!'
+            echo '✅ Build and Deployment Successful!'
         }
         failure {
             echo '❌ Build Failed! Check logs for issues.'
         }
     }
 }
+        
