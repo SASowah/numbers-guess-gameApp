@@ -63,7 +63,7 @@ pipeline {
         subject: "Build Success: ${env.JOB_NAME}",
         body: "Build #${env.BUILD_NUMBER} was successful.\nCheck the details at: ${env.BUILD_URL}",
         to: "georgesomina91@gmail.com, janecollins171993@gmail.com, kehinde_jimoh@yahoo.co.uk"
-        }
+        )
         failure {
             echo '❌ Build Failed! Check logs for issues.'
         }
