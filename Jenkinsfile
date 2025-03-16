@@ -1,5 +1,3 @@
-worked deploy script
---------------------
 pipeline {
     agent any
 
