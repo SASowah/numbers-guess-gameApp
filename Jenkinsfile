@@ -1,3 +1,5 @@
+worked deploy script
+--------------------
 pipeline {
     agent any
 
@@ -5,16 +7,12 @@ pipeline {
         SONARQUBE_URL = "http://13.53.123.95:9000/"
     }
 
-    parameters {
-        string(name: 'DEPLOY_ENV', defaultValue: 'dev', description: 'Deployment Environment')
-        string(name: 'BRANCH', defaultValue: 'dev', description: 'Git Branch to build')
-    }
 
     stages {
         stage('Checkout Code') {
             steps {
                 script {
-                    git branch: "${params.BRANCH}", 
+                    git branch: "develop", 
                         url: 'https://github.com/SASowah/numbers-guess-gameApp.git'
                 }
             }
@@ -64,7 +62,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Build, Testing, SonarQube Analysis, and Deployment Successful!'
+            echo '✅ Build, Testing, SonarQube Analysis, and Deployment Successful!',
+            emailext subject: "Build Success: ${env.JOB_NAME}",
+                     body: "Build #${env.BUILD_NUMBER} was successful.\nCheck the details at: ${env.BUILD_URL}",
+                     to: "georgesomina91@gmail.com.janecollins171993@gmail.com,kehinde_jimoh@yahoo.co.uk"
         }
         failure {
             echo '❌ Build Failed! Check logs for issues.'
