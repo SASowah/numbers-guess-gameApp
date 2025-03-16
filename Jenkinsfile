@@ -2,17 +2,19 @@ pipeline {
     agent any
 
     environment {
-	SONARQUBE_URL = "http://13.53.123.174:9000"
-	SONARQUBE_TOKEN = credentials("sonarqube-token")
-	TOMCAT_CREDS =credentials ("tomcat-credentials")
-	TOMCAT_URL = "http://13.60.242.211:8080"
+        SONARQUBE_URL = "http://13.53.123.174:9000"
+        TOMCAT_URL = "http://13.60.242.211:8080"
+    }
+
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'dev', description: 'Git branch to build')
+    }
 
     stages {
         stage('Checkout Code') {
             steps {
                 script {
-                    // If repo is private, add credentialsId
-                    git branch: 'dev', 
+                    git branch: "${params.BRANCH}", 
                         url: 'https://github.com/SASowah/numbers-guess-gameApp.git'
                 }
             }
@@ -30,28 +32,33 @@ pipeline {
             }
         }
 
- 	stage('SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             steps {
                 script {
-		      sh '''
-			mvn clean verify sonar:sonar \
-  			-Dsonar.projectKey=NumbersGuessGame \
-  			-Dsonar.projectName='NumbersGuessGame' \
-  			-Dsonar.host.url=$SONARQUBE_URL \
-  			-Dsonar.token=sqp_$SONARQUBE_TOKEN
-			'''
-                   
+                    withSonarQubeEnv('sonarqube-server') {  
+                        sh '''
+                        mvn clean verify sonar:sonar \
+                        -Dsonar.projectKey=NumbersGuessGame \
+                        -Dsonar.projectName="NumbersGuessGame" \
+                        -Dsonar.host.url=${SONARQUBE_URL}
+                        '''
+                    }
+                }
             }
         }
-	
 
         stage('Deploy') {
             steps {
-                echo 'Deploying Application...'
-                
-                // Deploying using Tomcat plugin
-                deploy adapters: [tomcat7(credentialsId: 'tomcat-credentials', path: '', url: 'http://13.60.242.211:8080')], 
-                    contextPath: null, war: '**/*.war'
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'tomcat-credentials', usernameVariable: 'TOMCAT_USER', passwordVariable: 'TOMCAT_PASS')]) {
+                        deploy adapters: [tomcat7(
+                            credentialsId: 'tomcat-credentials', 
+                            path: '', 
+                            url: TOMCAT_URL
+                        )], 
+                        war: '**/*.war'
+                    }
+                }
             }
         }
     }
@@ -63,7 +70,5 @@ pipeline {
         failure {
             echo '❌ Build Failed! Check logs for issues.'
         }
-    }
-}
     }
 }
