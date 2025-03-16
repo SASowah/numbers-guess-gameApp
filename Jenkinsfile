@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_URL = "http://13.53.123.174:9000"
+        SONARQUBE_URL = "http://13.53.123.95:9000/"
     }
 
     parameters {
@@ -54,7 +54,7 @@ pipeline {
                     deploy adapters: [tomcat7(
                         credentialsId: 'tomcat-credentials', 
                         path: '', 
-                        url: 'http://13.60.242.211:8080'
+                        url: 'http://13.51.165.114:8080/'
                     )], 
                     contextPath: 'numbers-game', war: 'target/*.war'
                 }
