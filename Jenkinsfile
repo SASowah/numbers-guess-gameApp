@@ -3,11 +3,11 @@ pipeline {
 
     environment {
         SONARQUBE_URL = "http://13.53.123.174:9000"
-        TOMCAT_URL = "http://13.60.242.211:8080"
     }
 
     parameters {
-        string(name: 'BRANCH', defaultValue: 'dev', description: 'Git branch to build')
+        string(name: 'DEPLOY_ENV', defaultValue: 'dev', description: 'Deployment Environment')
+        string(name: 'BRANCH', defaultValue: 'dev', description: 'Git Branch to build')
     }
 
     stages {
@@ -22,7 +22,7 @@ pipeline {
         
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
@@ -35,29 +35,28 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    withSonarQubeEnv('sonarqube-server') {  
+                    withSonarQubeEnv('sonarqube-token') { 
                         sh '''
-                        mvn clean verify sonar:sonar \
+                        mvn sonar:sonar \
                         -Dsonar.projectKey=NumbersGuessGame \
                         -Dsonar.projectName="NumbersGuessGame" \
-                        -Dsonar.host.url=${SONARQUBE_URL}
+                        -Dsonar.host.url=${SONARQUBE_URL} \
+                        -Dsonar.login=${SONAR_AUTH_TOKEN}
                         '''
                     }
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Tomcat') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'tomcat-credentials', usernameVariable: 'TOMCAT_USER', passwordVariable: 'TOMCAT_PASS')]) {
-                        deploy adapters: [tomcat7(
-                            credentialsId: 'tomcat-credentials', 
-                            path: '', 
-                            url: TOMCAT_URL
-                        )], 
-                        war: '**/*.war'
-                    }
+                    deploy adapters: [tomcat7(
+                        credentialsId: 'tomcat-credentials', 
+                        path: '', 
+                        url: 'http://13.60.242.211:8080'
+                    )], 
+                    contextPath: 'numbers-game', war: 'target/*.war'
                 }
             }
         }
@@ -65,7 +64,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Build and Deployment Successful!'
+            echo '✅ Build, Testing, SonarQube Analysis, and Deployment Successful!'
         }
         failure {
             echo '❌ Build Failed! Check logs for issues.'
